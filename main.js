@@ -1,5 +1,5 @@
 import * as THREE from "three";
-
+import { gsap } from "gsap";
 // --------- INITIALIZING -----------
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -81,26 +81,54 @@ let scrollSpeed = 0;
 let targetRotationZ = 0;
 let currentRotationZ = 0;
 const rotationSpeed = 0.1;
-
+var wheelDistance = function (evt) {
+  if (!evt) evt = event;
+  var w = evt.wheelDelta,
+    d = evt.detail;
+  if (d) {
+    if (w) return (w / d / 40) * d > 0 ? 1 : -1; // Opera
+    else return -d / 3; // Firefox;         TODO: do not /3 for OS X
+  } else return w / 120; // IE/Safari/Chrome TODO: /3 for Chrome OS X
+};
 function addWheelEvent() {
   addEventListener("wheel", (event) => {
-    const delta = event.wheelDeltaY;
-    const rotationAmount = delta / 10000; // Adjust rotation speed
+    // console.log("currentRotationZ initial", currentRotationZ);
+    let delta = event.wheelDeltaY;
+    console.log(
+      "event.wheelDelta,event.detail",
+      event.wheelDelta,
+      event.detail
+    );
+    // delta = delta % 120 == 0 ? delta / 120 : delta % 3 == 0 ? delta / 3 : delta;
+    console.log("delta", delta);
+    const rotationAmount = delta / 1000; // Adjust rotation speed
+    // console.log("rotationAmount", rotationAmount);
     scrollSpeed = rotationAmount * 100;
+    // console.log("targetRotationZ initial", targetRotationZ);
     targetRotationZ -= rotationAmount;
+    // console.log("targetRotationZ", targetRotationZ);
+    currentRotationZ += (targetRotationZ - currentRotationZ) * rotationSpeed;
+    // console.log("currentRotationZ", currentRotationZ);
+    gsap.to(group.rotation, {
+      z: group.rotation.z - rotationAmount,
+      // ease: "sine.inOut",
+    });
 
     // ---- CHANGE X POSITION OF BACKGROUND IMAGES ON SCROLL
     bgImagesGroup.children.forEach((e) => {
       let newX = e.position.x + rotationAmount * 10;
       if (newX <= -8 + e.position.z) {
         // If image goes out of view on -ve x reset it to end of +ve x
-        newX = 7 - e.position.z;
+        newX = 9 - e.position.z;
+        e.position.set(newX, e.position.y, e.position.z);
       } else if (newX >= 9 - e.position.z) {
         // If image goes out of view on +ve x reset it to end of -ve x
-        newX = -5 + e.position.z;
-      }
-      e.position.set(newX, e.position.y, e.position.z);
+        newX = -10 + e.position.z;
+        e.position.set(newX, e.position.y, e.position.z);
+      } else gsap.to(e.position, { x: newX });
+      // e.position.set(newX, e.position.y, e.position.z);
     });
+
     // group.rotation.z -= rotationAmount;
     // let index = Math.floor(group.rotation.z / angleIncrement) % n;
 
@@ -181,25 +209,21 @@ function carouselRotation(ts) {
   //   // e.material.uniforms.scrollSpeed.value = Math.min(scrollSpeed, 1.0);
   // });
   // ------ ROTATE CAROUSEL GROUP BASED ON SCROLL AMOUNT ---------
-  currentRotationZ += (targetRotationZ - currentRotationZ) * rotationSpeed;
-  group.rotation.z = currentRotationZ;
-
+  // currentRotationZ += (targetRotationZ - currentRotationZ) * rotationSpeed;
+  // group.rotation.z = currentRotationZ;
   // ------- CREATE SINE WAVE ON CAROUSEL ITEMS ON SCROLL ----------
-  group.children.forEach((e) => {
-    const positions = e.geometry.attributes.position.array;
-    const numVertices = positions.length / 3;
-    for (let i = 0; i < numVertices; i++) {
-      const x = positions[i * 3];
-      const y = positions[i * 3 + 1];
-      const zIndex = i * 3 + 2;
-
-      const flutter = Math.sin((x + y) * 3 + ts / 1000) * scrollSpeed * 0.02;
-
-      positions[zIndex] = flutter;
-    }
-
-    e.geometry.attributes.position.needsUpdate = true;
-  });
+  // group.children.forEach((e) => {
+  //   const positions = e.geometry.attributes.position.array;
+  //   const numVertices = positions.length / 3;
+  //   for (let i = 0; i < numVertices; i++) {
+  //     const x = positions[i * 3];
+  //     const y = positions[i * 3 + 1];
+  //     const zIndex = i * 3 + 2;
+  //     const flutter = Math.sin((x + y) * 3 + ts / 1000) * scrollSpeed * 0.02;
+  //     positions[zIndex] = flutter;
+  //   }
+  //   e.geometry.attributes.position.needsUpdate = true;
+  // });
 }
 function bgImageAnimation() {
   // ------- CONTINUOUSLY MOVE BACKGROUND IMAGES ON Y AXIS --------

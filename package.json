@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.4",
     "vite": "^4.4.5"
   },
   "dependencies": {
     "gsap": "^3.12.5",
+    "locomotive-scroll": "^4.1.4",
     "three": "^0.166.1"
   }
 }
